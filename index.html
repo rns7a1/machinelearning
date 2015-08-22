@@ -19,10 +19,199 @@
     </section>
 
     <section class="main-content">
-      <h1>
-<a id="machinelearning" class="anchor" href="#machinelearning" aria-hidden="true"><span class="octicon octicon-link"></span></a>machinelearning</h1>
+      <p>&lt;!DOCTYPE html&gt;</p>
 
-<p>Please see program_assignment.html in the GutHub repo.</p>
+<p></p>
+
+<p></p>
+
+<p>
+
+</p>
+
+<p></p>program_assignment
+
+
+
+<p>
+</p>
+
+
+
+
+
+
+
+code{white-space: pre;}
+
+<p></p>
+
+
+
+
+  pre:not([class]) {
+    background-color: white;
+  }
+
+
+
+
+<p></p>
+
+<p></p>
+
+
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img { 
+  max-width:100%; 
+  height: auto; 
+}
+
+
+<div>
+
+
+<div id="header">
+<h1>
+<a id="program_assignment" class="anchor" href="#program_assignment" aria-hidden="true"><span class="octicon octicon-link"></span></a>program_assignment</h1>
+</div>
+
+<p>Let’s follow the steps for <strong>CROSS VALIDATION</strong> outlined in slide 4 in the Cross Validation lecture for this course. For reference, the steps are list as:</p>
+
+<p><em>Step 1: Use training set</em></p>
+
+<p><em>Step 2: Split it into training/test sets</em></p>
+
+<p><em>Step 3: Build a model on the training set</em></p>
+
+<p><em>Step 4: Evaluate on the test set</em></p>
+
+<p><em>Step 5: Repeat and average the errors</em></p>
+
+<p>Each section of this document represents one of these steps.</p>
+
+<div id="step-1-use-training-set">
+<h2>
+<a id="step-1-use-training-set" class="anchor" href="#step-1-use-training-set" aria-hidden="true"><span class="octicon octicon-link"></span></a>Step 1: Use training set</h2>
+<p>So let’s load the full training set as “full_train”.</p>
+<pre><code>full_train &lt;- read.csv('https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv')</code></pre>
+</div>
+
+<div id="step-2-split-it-into-trainingtest-sets">
+<h2>
+<a id="step-2-split-it-into-trainingtest-sets" class="anchor" href="#step-2-split-it-into-trainingtest-sets" aria-hidden="true"><span class="octicon octicon-link"></span></a>Step 2: Split it into training/test sets</h2>
+<p>So before we even begin looking at the training data let’s break it up into subsets. This will allow us to perform <strong>cross validation</strong> on our model and estimate our out of sample error. We will be using the <strong>Random subsampling</strong> approach, so let’s split the “full_train” training set into two random subsamples, where the “training”" subset is 70% of the “full_train” set, and the “testing” subset is the remaining 30% of the “full_train” set.</p>
+<pre><code>inTrain &lt;- createDataPartition(y=full_train$classe, p=0.7, list=FALSE)
+training &lt;- full_train[inTrain,]
+testing &lt;- full_train[-inTrain,]</code></pre>
+</div>
+
+<div id="step-3-build-a-model-on-the-training-set">
+<h2>
+<a id="step-3-build-a-model-on-the-training-set" class="anchor" href="#step-3-build-a-model-on-the-training-set" aria-hidden="true"><span class="octicon octicon-link"></span></a>Step 3: Build a model on the training set</h2>
+<p>Now let’s begin exploring the subset “training”. Remember, we want to build our model on our new “training” subset, and leave the “testing”" subset alone, so that we can perform <strong>cross validation</strong>. Since we are interested in predicting the “classe” feature, let’s plot it with respect to some other features.</p>
+<pre><code>qplot(num_window,classe,data=training)</code></pre>
+<p><img title alt width="672"></p>
+<p>Based on the figure above, it seems like the feature “num_window” will be useful in predicting “classe”. Notice how for many “num_window” values, there is only one “classe” value associated that given “num_window” value. In other words, if you know the value of “num_window”, you’d be able to predict the value of “classe”.</p>
+<pre><code>qplot(roll_belt,classe,data=training)</code></pre>
+<p><img title alt width="672"></p>
+<p>The figure above shows there is also a relationship between the features “roll_belt” and “classe”. While not all values of “roll_belt” are associated with unique values of “classe”, it does appear that very high values of “roll_belt” are associated with with a “classe” value of E, and low values of “roll_belt” (except for those around 0) are associated with “classe” values of E or D. Therefore, the “roll_belt” feature may also be a useful feature in predicting “classe”.</p>
+<p>Based on this analysis, let’s form a new data sets that takes only the “num_window” and “roll_belt” features. We will pull these features from both our “training” subset.</p>
+<pre><code>new_train &lt;- training[,c("num_window", "roll_belt")]</code></pre>
+<p>Now we need to actually <em>build</em> a model. Since the “classe” feature is a classification (as opposed to a continuous numerical value), we probably want a classification model. Random forests are useful for building classification models, so let’s take that approach.</p>
+<p>Here we build a random forest model called “newModel” with the “num_window” and “roll_belt” features of our “training” subset.</p>
+<pre><code>newModel &lt;- train(training$classe ~ ., method="rf", data=new_train)</code></pre>
+<pre><code>## note: only 1 unique complexity parameters in default grid. Truncating the grid to 1 .</code></pre>
+<p>Now we are ready to test this model on our “testing” subset.</p>
+</div>
+
+<div id="step-4-evaluate-on-the-test-set">
+<h2>
+<a id="step-4-evaluate-on-the-test-set" class="anchor" href="#step-4-evaluate-on-the-test-set" aria-hidden="true"><span class="octicon octicon-link"></span></a>Step 4: Evaluate on the test set</h2>
+<p>First we will need to apply the same proccesing we did to the “training” subset (i.e., extract onlt the “num_window” and “roll_belt” features) to our “testing” subset.</p>
+<pre><code>new_test &lt;- testing[,c("num_window", "roll_belt")]</code></pre>
+<p>Since the “classe” feature is a classification value (rather than a continuout numerical value) we’ll use a confusion matrix to obtain the error of this model on our testing subset.</p>
+<pre><code>evalModel &lt;- confusionMatrix(testing$classe,predict(newModel,new_test))</code></pre>
+<p>Let’s take a look at the accuracy from the output of our confusion matrix.</p>
+<pre><code>evalModel$overall['Accuracy']</code></pre>
+<pre><code>## Accuracy 
+##        1</code></pre>
+<p>We see from the above output that the accuracy of our model is 1. The error of this model can be calculated a 1 - Accuracy, and is found to be 0. Let’s save this value for reference.</p>
+<pre><code>model1_err &lt;- 1-evalModel$overall[['Accuracy']]</code></pre>
+</div>
+
+<div id="step-5-repeat-and-average-the-errors">
+<h2>
+<a id="step-5-repeat-and-average-the-errors" class="anchor" href="#step-5-repeat-and-average-the-errors" aria-hidden="true"><span class="octicon octicon-link"></span></a>Step 5: Repeat and average the errors</h2>
+<p>In order to perform <strong>cross validation</strong> and <strong>estimate our out of sample error</strong> , we need to repeat the above 4 steps on different random subsamples of our “full_train” training set.</p>
+<p>First let’s remove previous results, so that we are sure our new results are based on the new subsamples.</p>
+<pre><code>rm(inTrain)
+rm(training)
+rm(testing)
+rm(new_train)
+rm(new_test)
+rm(newModel)
+rm(evalModel)</code></pre>
+<p>I’ll just show the steps here without description, because we are simply repeating the exact same steps as described above, after creating new subsamples.</p>
+<pre><code>inTrain &lt;- createDataPartition(y=full_train$classe, p=0.7, list=FALSE)
+training &lt;- full_train[inTrain,]
+testing &lt;- full_train[-inTrain,]
+new_train &lt;- training[,c("num_window", "roll_belt")]
+newModel &lt;- train(training$classe ~ ., method="rf", data=new_train)</code></pre>
+<pre><code>## note: only 1 unique complexity parameters in default grid. Truncating the grid to 1 .</code></pre>
+<pre><code>new_test &lt;- testing[,c("num_window", "roll_belt")]
+evalModel &lt;- confusionMatrix(testing$classe,predict(newModel,new_test))
+model2_err &lt;- 1 - evalModel$overall[['Accuracy']]
+model2_err</code></pre>
+<pre><code>## [1] 0</code></pre>
+<p>We find the error of this model applied to the new “testing”" subsample is 0.</p>
+<p>Let’s remove these results:</p>
+<pre><code>rm(inTrain)
+rm(training)
+rm(testing)
+rm(new_train)
+rm(new_test)
+rm(newModel)
+rm(evalModel)</code></pre>
+<p>And try one more time:</p>
+<pre><code>inTrain &lt;- createDataPartition(y=full_train$classe, p=0.7, list=FALSE)
+training &lt;- full_train[inTrain,]
+testing &lt;- full_train[-inTrain,]
+new_train &lt;- training[,c("num_window", "roll_belt")]
+newModel &lt;- train(training$classe ~ ., method="rf", data=new_train)</code></pre>
+<pre><code>## note: only 1 unique complexity parameters in default grid. Truncating the grid to 1 .</code></pre>
+<pre><code>new_test &lt;- testing[,c("num_window", "roll_belt")]
+evalModel &lt;- confusionMatrix(testing$classe,predict(newModel,new_test))
+model3_err &lt;- 1 - evalModel$overall[['Accuracy']]
+model3_err</code></pre>
+<pre><code>## [1] 0</code></pre>
+<p>We find the error of this model applied to the new “testing”" subsample is 0.</p>
+<p>We average all three errors for the three subsamples to <strong>estimate the out of sample error using cross validation</strong>*:</p>
+<pre><code>out_of_sample_error &lt;- mean(model1_err, model2_err, model3_err)
+out_of_sample_error</code></pre>
+<pre><code>## [1] 0</code></pre>
+<p>Therefore, we would estimate our <strong>out of sample error</strong> to be 0. This estimate of out of sample error was obtained by <strong>cross validation</strong>, where the error of repeated subsampling was averaged. And, in fact, after applying this model to the true testing set and submitting the predictions for the course assignment, I did have 100% accuracy with all predictions.</p>
+</div>
+
+<p></p>
+</div>
+
+
+
+
+
+
+
+<p>
+</p>
 
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/rns7a1/machinelearning">Machinelearning</a> is maintained by <a href="https://github.com/rns7a1">rns7a1</a>.</span>
